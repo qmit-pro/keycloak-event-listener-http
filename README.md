@@ -1,7 +1,7 @@
 # keycloak-event-listener-http
 
 A Keycloak SPI that publishes events to an HTTP Webhook.
-A (largely) adaptation of @mhui mhuin/keycloak-event-listener-mqtt SPI.
+A combination of  @jessylenne/keycloak-event-listener-http SPI and the keycloak-event-listener-rabbitmq SPI.
 Extended by @darrensapalo to [enable building the JAR files from docker images](https://sapalo.dev/2021/06/16/send-keycloak-webhook-events/).
 
 # Build
@@ -77,19 +77,23 @@ Add/Update a user, your webhook should be called, looks at the keycloak syslog f
 Request example
 ```
 {
-    "type": "REGISTER",
-    "realmId": "myrealm",
-    "clientId": "heva",
-    "userId": "bcee5034-c65f-4d7c-9036-034042f0a054",
-    "ipAddress": "172.21.0.1", 
-    "details": {
-        "auth_method": "openid-connect",
-        "auth_type": "code",
-        "register_method": "form",
-        "redirect_uri": "http://nginx:8000/",
-        "code_id": "98bfe6b2-b8c2-4b82-bc85-9cd033324ec9",
-        "email": "fake.email@service.com",
-        "username": "username"
-    }
+{
+  '@class': 'org.softwarefactory.keycloak.providers.events.http.AdminEventNotification',
+  id: null,
+  time: 1644281802199,
+  realmId: 'github',
+  authDetails: {
+    realmId: 'master',
+    clientId: '0caa5a71-c84c-461f-94ee-7b862ad47608',
+    userId: '8f8b083b-9cca-45eb-a839-99cd41ae77d9',
+    ipAddress: '172.0.0.1'
+  },
+  resourceType: 'USER',
+  operationType: 'UPDATE',
+  resourcePath: 'users/d57594cd-7425-492f-a3a7-4576d51ea745',
+  representation: '{"id":"d57594cd-7425-492f-a3a7-4576d51ea745","createdTimestamp":1642815331413,"username":"abdoulaye.traore","enabled":true,"totp":false,"emailVerified":true,"firstName":"firstN me","lastName":"lastName","email":"aktraore@github.com","attributes":{},"disableableCredentialTypes":[],"requiredActions":["UPDATE_PASSWORD"],"notBefore":0,"access":{"manageGroupMembership":true,"view":true,"mapRoles":true,"impersonate":true,"manage":true}}',
+  error: null,
+  resourceTypeAsString: 'USER'
+}
 }
 ```
