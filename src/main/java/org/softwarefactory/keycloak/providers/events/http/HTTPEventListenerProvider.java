@@ -27,6 +27,7 @@ import org.keycloak.events.EventType;
 import org.keycloak.events.admin.AdminEvent;
 import org.keycloak.events.admin.OperationType;
 import org.keycloak.models.KeycloakSession;
+import org.apache.commons.codec.binary.Base64;
 
 import okhttp3.MediaType;
 import okhttp3.OkHttpClient;
@@ -105,7 +106,11 @@ public class HTTPEventListenerProvider implements EventListenerProvider {
             
 
             if (this.username != null && this.password != null) {
-                builder.addHeader("Authorization", "Basic " + this.username + ":" + this.password.toCharArray());
+                Base64 base64 = new Base64();
+                String valueToEncode = this.username + ":" + this.password;
+                byte[] encodedBytes = base64.encode(valueToEncode.getBytes());
+                String encodedString = new String(encodedBytes);
+                builder.addHeader("Authorization", "Basic " + encodedString);
             }
             
             Request request = builder.post(formBody)

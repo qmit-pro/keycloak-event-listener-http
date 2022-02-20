@@ -33,6 +33,11 @@
             <artifactId>keycloak-core</artifactId>
             <version>${version.keycloak}</version>
         </dependency>
+         <dependency>
+            <groupId>commons-codec</groupId>
+            <artifactId>commons-codec</artifactId>
+            <version>1.12</version>
+        </dependency>
         <dependency>
             <groupId>org.keycloak</groupId>
             <artifactId>keycloak-server-spi</artifactId>
