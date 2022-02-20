@@ -1,0 +1,5 @@
+org/softwarefactory/keycloak/providers/events/http/HTTPEventListenerProviderFactory.class
+org/softwarefactory/keycloak/providers/events/http/ClientEventNotification.class
+org/softwarefactory/keycloak/providers/events/http/HTTPEventListenerProvider.class
+org/softwarefactory/keycloak/providers/events/http/HTTPEventConfiguration.class
+org/softwarefactory/keycloak/providers/events/http/AdminEventNotification.class
