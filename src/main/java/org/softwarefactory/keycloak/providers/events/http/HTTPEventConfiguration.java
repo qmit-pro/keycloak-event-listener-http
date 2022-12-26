@@ -46,20 +46,22 @@ public class HTTPEventConfiguration {
 	}
 	
 	private static String resolveConfigVar(Scope config, String variableName, String defaultValue) {
-		
-		String value = defaultValue;
-		if(config != null && config.get(variableName) != null) {
-			value = config.get(variableName);
-		} else {
-			//try from env variables eg: HTTP_EVENT_:
-			String envVariableName = PREFIX_CONFIGURATION + variableName.toUpperCase();
-			if(System.getenv(envVariableName) != null) {
-				value = System.getenv(envVariableName);
-			}
+		String configVariable = resolveConfigVarIfConfigExists(config, variableName);
+		String envVariable = System.getenv(PREFIX_CONFIGURATION + variableName.toUpperCase());
+		if (configVariable != null) {
+			return configVariable;
 		}
-		System.out.println("HTTPEventListener configuration: " + variableName + "=" + value);
-		return value;
-		
+		if (envVariable != null) {
+			return envVariable;
+		}
+		return defaultValue;
+	}
+
+	private static String resolveConfigVarIfConfigExists(Scope config, String variableName) {
+		if (config != null) {
+			return config.get(variableName);
+		}
+		return null;
 	}
 
 	public static String writeAsJson(Object object, boolean isPretty) {
