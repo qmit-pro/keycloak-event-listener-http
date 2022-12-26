@@ -69,9 +69,8 @@ public class HTTPEventListenerProvider implements EventListenerProvider {
         // Ignore excluded events
         if (excludedEvents != null && excludedEvents.contains(event.getType())) {
             return;
-        } else {
-            tx.addEvent(event);
         }
+        tx.addEvent(event);
     }
 
     @Override
@@ -79,9 +78,8 @@ public class HTTPEventListenerProvider implements EventListenerProvider {
         // Ignore excluded operations
         if (excludedAdminOperations != null && excludedAdminOperations.contains(adminEvent.getOperationType())) {
             return;
-        } else {
-            tx.addAdminEvent(adminEvent, includeRepresentation);
         }
+        tx.addAdminEvent(adminEvent, includeRepresentation);
     }
 
     public void publishEvent(Event event) {
