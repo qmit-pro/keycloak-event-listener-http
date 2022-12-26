@@ -27,7 +27,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
  */
 public class HTTPEventConfiguration {
 
-    private String serverUri;
+	private static final String PREFIX_CONFIGURATION = "HTTP_EVENT_";
+	private String serverUri;
 	private String username;
 	private String password;
 
@@ -51,7 +52,7 @@ public class HTTPEventConfiguration {
 			value = config.get(variableName);
 		} else {
 			//try from env variables eg: HTTP_EVENT_:
-			String envVariableName = "HTTP_EVENT_" + variableName.toUpperCase();
+			String envVariableName = PREFIX_CONFIGURATION + variableName.toUpperCase();
 			if(System.getenv(envVariableName) != null) {
 				value = System.getenv(envVariableName);
 			}
