@@ -33,7 +33,7 @@ import java.util.stream.Collectors;
 public class HTTPEventConfiguration {
 
 	private static final String PREFIX_CONFIGURATION = "HTTP_EVENT_";
-	private String serverUri;
+	private Set<String> serverUri;
 	private String username;
 	private String password;
 
@@ -42,7 +42,7 @@ public class HTTPEventConfiguration {
 	public static HTTPEventConfiguration createFromScope(Scope config) {
 		HTTPEventConfiguration configuration = new HTTPEventConfiguration();
 		
-		configuration.serverUri = resolveConfigVar(config, "serverUri", "http://127.0.0.1:8080/webhook");
+		configuration.serverUri = resolveConfigVar("serverUri");
 		configuration.username = resolveConfigVar(config, "username", "keycloak");
 		configuration.password = resolveConfigVar(config, "password", "keycloak");
 
@@ -50,7 +50,7 @@ public class HTTPEventConfiguration {
 		
 	}
 
-	private static Set<String> resolveConfigVar(Scope config, String variableName) {
+	private static Set<String> resolveConfigVar(String variableName) {
 		String envVariables = System.getenv(PREFIX_CONFIGURATION + variableName.toUpperCase());
 		if (envVariables != null) {
 			return Arrays.stream(envVariables.split(","))
@@ -94,14 +94,10 @@ public class HTTPEventConfiguration {
 		}
 		return messageAsJson;
 	}
-	
-	
-	
-	public String getServerUri() {
+
+
+	public Set<String> getServerUri() {
 		return serverUri;
-	}
-	public void setServerUri(String serverUri) {
-		this.serverUri = serverUri;
 	}
 
 	public String getUsername() {

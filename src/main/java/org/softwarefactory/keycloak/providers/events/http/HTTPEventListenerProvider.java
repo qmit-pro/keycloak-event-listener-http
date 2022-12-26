@@ -18,6 +18,7 @@
 package org.softwarefactory.keycloak.providers.events.http;
 
 import java.io.IOException;
+import java.util.Objects;
 import java.util.Set;
 
 import org.keycloak.events.Event;
@@ -43,7 +44,7 @@ public class HTTPEventListenerProvider implements EventListenerProvider {
 	private final OkHttpClient httpClient = new OkHttpClient();
     private Set<EventType> excludedEvents;
     private Set<OperationType> excludedAdminOperations;
-    private String serverUri;
+    private Set<String> serverUri;
     private String username;
     private String password;
 
@@ -51,7 +52,7 @@ public class HTTPEventListenerProvider implements EventListenerProvider {
     
 	private EventListenerTransaction tx = new EventListenerTransaction(this::publishAdminEvent, this::publishEvent);
 
-    public HTTPEventListenerProvider(Set<EventType> excludedEvents, Set<OperationType> excludedAdminOperations, String serverUri, String username, String password, KeycloakSession session) {
+    public HTTPEventListenerProvider(Set<EventType> excludedEvents, Set<OperationType> excludedAdminOperations, Set<String> serverUri, String username, String password, KeycloakSession session) {
         this.excludedEvents = excludedEvents;
         this.excludedAdminOperations = excludedAdminOperations;
         this.serverUri = serverUri;
@@ -100,34 +101,35 @@ public class HTTPEventListenerProvider implements EventListenerProvider {
 
             RequestBody formBody = RequestBody.create(event, JSON);
 
-            okhttp3.Request.Builder builder = new Request.Builder()
-                    .url(this.serverUri)
-                    .addHeader("User-Agent", "KeycloakHttp Bot");
-            
+            for (String serverUri : this.serverUri) {
+                okhttp3.Request.Builder builder = new Request.Builder()
+                        .url(serverUri)
+                        .addHeader("User-Agent", "KeycloakHttp Bot");
 
-            if (this.username != null && this.password != null) {
-                Base64 base64 = new Base64();
-                String valueToEncode = this.username + ":" + this.password;
-                byte[] encodedBytes = base64.encode(valueToEncode.getBytes());
-                String encodedString = new String(encodedBytes);
-                builder.addHeader("Authorization", "Basic " + encodedString);
-            }
-            
-            Request request = builder.post(formBody)
-                    .build();
-            
-            Response response = httpClient.newCall(request).execute();
-            
-            if (!response.isSuccessful()) {
-                throw new IOException("Unexpected code " + response);
-            }
 
-            // Get response body
-            System.out.println(response.body().string());
+                if (this.username != null && this.password != null) {
+                    Base64 base64 = new Base64();
+                    String valueToEncode = this.username + ":" + this.password;
+                    byte[] encodedBytes = base64.encode(valueToEncode.getBytes());
+                    String encodedString = new String(encodedBytes);
+                    builder.addHeader("Authorization", "Basic " + encodedString);
+                }
+
+                Request request = builder.post(formBody)
+                        .build();
+
+                Response response = httpClient.newCall(request).execute();
+
+                if (!response.isSuccessful()) {
+                    throw new IOException("Unexpected code " + response);
+                }
+
+                // Get response body
+                System.out.println(Objects.requireNonNull(response.body()).string());
+            }
         } catch(Exception e) {
             System.out.println("An error occured while sending event : " + e.toString());
             e.printStackTrace();
-            return;
         }
     }
 
