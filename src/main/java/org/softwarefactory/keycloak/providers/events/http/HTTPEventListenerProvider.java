@@ -21,6 +21,7 @@ import java.io.IOException;
 import java.util.Objects;
 import java.util.Set;
 
+import org.apache.http.HttpHeaders;
 import org.keycloak.events.Event;
 import org.keycloak.events.EventListenerProvider;
 import org.keycloak.events.EventListenerTransaction;
@@ -102,23 +103,15 @@ public class HTTPEventListenerProvider implements EventListenerProvider {
             RequestBody formBody = RequestBody.create(event, JSON);
 
             for (String serverUri : this.serverUri) {
-                okhttp3.Request.Builder builder = new Request.Builder()
+                Request request = new Request.Builder()
                         .url(serverUri)
-                        .addHeader("User-Agent", "KeycloakHttp Bot");
-
-
-                if (this.username != null && this.password != null) {
-                    Base64 base64 = new Base64();
-                    String valueToEncode = this.username + ":" + this.password;
-                    byte[] encodedBytes = base64.encode(valueToEncode.getBytes());
-                    String encodedString = new String(encodedBytes);
-                    builder.addHeader("Authorization", "Basic " + encodedString);
-                }
-
-                Request request = builder.post(formBody)
+                        .addHeader(HttpHeaders.AUTHORIZATION, getAuthorizationBasicToken())
+                        .addHeader("User-Agent", "KeycloakHttp Bot")
+                        .post(formBody)
                         .build();
 
-                Response response = httpClient.newCall(request).execute();
+                Response response = httpClient.newCall(request)
+                        .execute();
 
                 if (!response.isSuccessful()) {
                     throw new IOException("Unexpected code " + response);
@@ -128,9 +121,16 @@ public class HTTPEventListenerProvider implements EventListenerProvider {
                 System.out.println(Objects.requireNonNull(response.body()).string());
             }
         } catch(Exception e) {
-            System.out.println("An error occured while sending event : " + e.toString());
+            System.out.println("An error occured while sending event : " + e);
             e.printStackTrace();
         }
+    }
+
+    private String getAuthorizationBasicToken() {
+        Base64 base64 = new Base64();
+        String valueToEncode = this.username + ":" + this.password;
+        byte[] encodedBytes = base64.encode(valueToEncode.getBytes());
+        return "Basic " + new String(encodedBytes);
     }
 
 
