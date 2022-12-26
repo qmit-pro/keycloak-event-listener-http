@@ -22,6 +22,11 @@ import org.keycloak.Config.Scope;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.Set;
+import java.util.stream.Collectors;
+
 /**
  * @author <a href="mailto:traore_a@outlook.com">Abdoulaye Traore</a>
  */
@@ -43,6 +48,15 @@ public class HTTPEventConfiguration {
 
 		return configuration;
 		
+	}
+
+	private static Set<String> resolveConfigVar(Scope config, String variableName) {
+		String envVariables = System.getenv(PREFIX_CONFIGURATION + variableName.toUpperCase());
+		if (envVariables != null) {
+			return Arrays.stream(envVariables.split(","))
+					.collect(Collectors.toSet());
+		}
+		return Collections.emptySet();
 	}
 	
 	private static String resolveConfigVar(Scope config, String variableName, String defaultValue) {
