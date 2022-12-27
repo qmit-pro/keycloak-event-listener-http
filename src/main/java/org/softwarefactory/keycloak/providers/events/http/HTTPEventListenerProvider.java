@@ -108,8 +108,7 @@ public class HTTPEventListenerProvider implements EventListenerProvider {
                         .post(formBody)
                         .build();
 
-                Response response = httpClient.newCall(request)
-                        .execute();
+                Response response = httpClient.newCall(request).execute();
 
                 if (!response.isSuccessful()) {
                     throw new IOException("Unexpected code " + response);
