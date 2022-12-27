@@ -35,7 +35,7 @@ public class HTTPEventListenerProviderFactory implements EventListenerProviderFa
 
     private Set<EventType> excludedEvents;
     private Set<OperationType> excludedAdminOperations;
-    private String serverUri;
+    private Set<String> serverUri;
     private String username;
     private String password;
 

@@ -22,12 +22,18 @@ import org.keycloak.Config.Scope;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.Set;
+import java.util.stream.Collectors;
+
 /**
  * @author <a href="mailto:traore_a@outlook.com">Abdoulaye Traore</a>
  */
 public class HTTPEventConfiguration {
 
-    private String serverUri;
+	private static final String PREFIX_CONFIGURATION = "HTTP_EVENT_";
+	private Set<String> serverUri;
 	private String username;
 	private String password;
 
@@ -36,29 +42,40 @@ public class HTTPEventConfiguration {
 	public static HTTPEventConfiguration createFromScope(Scope config) {
 		HTTPEventConfiguration configuration = new HTTPEventConfiguration();
 		
-		configuration.serverUri = resolveConfigVar(config, "serverUri", "http://127.0.0.1:8080/webhook");
+		configuration.serverUri = resolveConfigVar("serverUri");
 		configuration.username = resolveConfigVar(config, "username", "keycloak");
 		configuration.password = resolveConfigVar(config, "password", "keycloak");
 
 		return configuration;
 		
 	}
+
+	private static Set<String> resolveConfigVar(String variableName) {
+		String envVariables = System.getenv(PREFIX_CONFIGURATION + variableName.toUpperCase());
+		if (envVariables != null) {
+			return Arrays.stream(envVariables.split(","))
+					.collect(Collectors.toSet());
+		}
+		return Collections.emptySet();
+	}
 	
 	private static String resolveConfigVar(Scope config, String variableName, String defaultValue) {
-		
-		String value = defaultValue;
-		if(config != null && config.get(variableName) != null) {
-			value = config.get(variableName);
-		} else {
-			//try from env variables eg: HTTP_EVENT_:
-			String envVariableName = "HTTP_EVENT_" + variableName.toUpperCase();
-			if(System.getenv(envVariableName) != null) {
-				value = System.getenv(envVariableName);
-			}
+		String configVariable = resolveConfigVarIfConfigExists(config, variableName);
+		String envVariable = System.getenv(PREFIX_CONFIGURATION + variableName.toUpperCase());
+		if (configVariable != null) {
+			return configVariable;
 		}
-		System.out.println("HTTPEventListener configuration: " + variableName + "=" + value);
-		return value;
-		
+		if (envVariable != null) {
+			return envVariable;
+		}
+		return defaultValue;
+	}
+
+	private static String resolveConfigVarIfConfigExists(Scope config, String variableName) {
+		if (config != null) {
+			return config.get(variableName);
+		}
+		return null;
 	}
 
 	public static String writeAsJson(Object object, boolean isPretty) {
@@ -77,14 +94,10 @@ public class HTTPEventConfiguration {
 		}
 		return messageAsJson;
 	}
-	
-	
-	
-	public String getServerUri() {
+
+
+	public Set<String> getServerUri() {
 		return serverUri;
-	}
-	public void setServerUri(String serverUri) {
-		this.serverUri = serverUri;
 	}
 
 	public String getUsername() {

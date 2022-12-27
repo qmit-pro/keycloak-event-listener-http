@@ -18,8 +18,10 @@
 package org.softwarefactory.keycloak.providers.events.http;
 
 import java.io.IOException;
+import java.util.Objects;
 import java.util.Set;
 
+import org.apache.http.HttpHeaders;
 import org.keycloak.events.Event;
 import org.keycloak.events.EventListenerProvider;
 import org.keycloak.events.EventListenerTransaction;
@@ -43,7 +45,7 @@ public class HTTPEventListenerProvider implements EventListenerProvider {
 	private final OkHttpClient httpClient = new OkHttpClient();
     private Set<EventType> excludedEvents;
     private Set<OperationType> excludedAdminOperations;
-    private String serverUri;
+    private Set<String> serverUri;
     private String username;
     private String password;
 
@@ -51,7 +53,7 @@ public class HTTPEventListenerProvider implements EventListenerProvider {
     
 	private EventListenerTransaction tx = new EventListenerTransaction(this::publishAdminEvent, this::publishEvent);
 
-    public HTTPEventListenerProvider(Set<EventType> excludedEvents, Set<OperationType> excludedAdminOperations, String serverUri, String username, String password, KeycloakSession session) {
+    public HTTPEventListenerProvider(Set<EventType> excludedEvents, Set<OperationType> excludedAdminOperations, Set<String> serverUri, String username, String password, KeycloakSession session) {
         this.excludedEvents = excludedEvents;
         this.excludedAdminOperations = excludedAdminOperations;
         this.serverUri = serverUri;
@@ -67,9 +69,8 @@ public class HTTPEventListenerProvider implements EventListenerProvider {
         // Ignore excluded events
         if (excludedEvents != null && excludedEvents.contains(event.getType())) {
             return;
-        } else {
-            tx.addEvent(event);
         }
+        tx.addEvent(event);
     }
 
     @Override
@@ -77,9 +78,8 @@ public class HTTPEventListenerProvider implements EventListenerProvider {
         // Ignore excluded operations
         if (excludedAdminOperations != null && excludedAdminOperations.contains(adminEvent.getOperationType())) {
             return;
-        } else {
-            tx.addAdminEvent(adminEvent, includeRepresentation);
         }
+        tx.addAdminEvent(adminEvent, includeRepresentation);
     }
 
     public void publishEvent(Event event) {
@@ -100,35 +100,34 @@ public class HTTPEventListenerProvider implements EventListenerProvider {
 
             RequestBody formBody = RequestBody.create(event, JSON);
 
-            okhttp3.Request.Builder builder = new Request.Builder()
-                    .url(this.serverUri)
-                    .addHeader("User-Agent", "KeycloakHttp Bot");
-            
+            for (String serverUri : this.serverUri) {
+                Request request = new Request.Builder()
+                        .url(serverUri)
+                        .addHeader(HttpHeaders.AUTHORIZATION, getAuthorizationBasicToken())
+                        .addHeader("User-Agent", "KeycloakHttp Bot")
+                        .post(formBody)
+                        .build();
 
-            if (this.username != null && this.password != null) {
-                Base64 base64 = new Base64();
-                String valueToEncode = this.username + ":" + this.password;
-                byte[] encodedBytes = base64.encode(valueToEncode.getBytes());
-                String encodedString = new String(encodedBytes);
-                builder.addHeader("Authorization", "Basic " + encodedString);
-            }
-            
-            Request request = builder.post(formBody)
-                    .build();
-            
-            Response response = httpClient.newCall(request).execute();
-            
-            if (!response.isSuccessful()) {
-                throw new IOException("Unexpected code " + response);
-            }
+                Response response = httpClient.newCall(request).execute();
 
-            // Get response body
-            System.out.println(response.body().string());
+                if (!response.isSuccessful()) {
+                    throw new IOException("Unexpected code " + response);
+                }
+
+                // Get response body
+                System.out.println(Objects.requireNonNull(response.body()).string());
+            }
         } catch(Exception e) {
-            System.out.println("An error occured while sending event : " + e.toString());
-            e.printStackTrace();
-            return;
+            System.out.println("An error occured while sending event : " + e.getMessage());
+            System.out.println("cause : " + e.getCause());
         }
+    }
+
+    private String getAuthorizationBasicToken() {
+        Base64 base64 = new Base64();
+        String valueToEncode = this.username + ":" + this.password;
+        byte[] encodedBytes = base64.encode(valueToEncode.getBytes());
+        return "Basic " + new String(encodedBytes);
     }
 
 
