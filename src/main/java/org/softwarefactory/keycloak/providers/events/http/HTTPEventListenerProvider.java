@@ -119,7 +119,7 @@ public class HTTPEventListenerProvider implements EventListenerProvider {
                 System.out.println(Objects.requireNonNull(response.body()).string());
             }
         } catch(Exception e) {
-            System.out.println("An error occured while sending event : " + e);
+            System.out.println("An error occured while sending event : " + e.getMessage());
             e.printStackTrace();
         }
     }
