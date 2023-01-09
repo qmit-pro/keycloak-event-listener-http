@@ -41,8 +41,10 @@ public class HTTPEventConfiguration {
 	
 	public static HTTPEventConfiguration createFromScope(Scope config) {
 		HTTPEventConfiguration configuration = new HTTPEventConfiguration();
-		
-		configuration.serverUri = resolveConfigVar("serverUri");
+
+		String serverUri = resolveConfigVar(config, "serverUri", "http://127.0.0.1:8080/webhook");
+
+		configuration.serverUri = toSet(serverUri, ",");
 		configuration.username = resolveConfigVar(config, "username", "keycloak");
 		configuration.password = resolveConfigVar(config, "password", "keycloak");
 
@@ -50,13 +52,9 @@ public class HTTPEventConfiguration {
 		
 	}
 
-	private static Set<String> resolveConfigVar(String variableName) {
-		String envVariables = System.getenv(PREFIX_CONFIGURATION + variableName.toUpperCase());
-		if (envVariables != null) {
-			return Arrays.stream(envVariables.split(","))
-					.collect(Collectors.toSet());
-		}
-		return Collections.emptySet();
+	private static Set<String> toSet(String envVariables, String regex) {
+		return Arrays.stream(envVariables.split(regex))
+				.collect(Collectors.toSet());
 	}
 	
 	private static String resolveConfigVar(Scope config, String variableName, String defaultValue) {
